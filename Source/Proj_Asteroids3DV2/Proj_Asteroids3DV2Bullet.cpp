@@ -4,6 +4,9 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine.h"
+#include "Proj_Asteroids3DV2/EnemyAIBaseCharacter.h"
+#include "Proj_Asteroids3DV2/Proj_Asteroids3DV2Pawn.h"
+#include "Proj_Asteroids3DV2/Proj_Asteroids3DV2GameMode.h"
 
 // Sets default values
 AProj_Asteroids3DV2Bullet::AProj_Asteroids3DV2Bullet()
@@ -46,6 +49,6 @@ void AProj_Asteroids3DV2Bullet::Tick(float DeltaTime)
 // Called on collision
 void AProj_Asteroids3DV2Bullet::OnHit(UPrimitiveComponent *HitComponent, AActor *OtherActor, UPrimitiveComponent *OtherComponent, FVector NormalImpulse, const FHitResult &hit)
 {
-	// FString debugMessage = FString::Printf(TEXT("Hit %s"), *OtherActor->GetName());
-	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, debugMessage);
+	// if (OtherActor != GetInstigator() || GetInstigator() == nullptr)
+	// 	UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, NULL, this, NULL);
 }

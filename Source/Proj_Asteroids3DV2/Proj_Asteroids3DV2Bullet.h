@@ -31,6 +31,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MoveSpeed;
 
+	// Damage value indicating how much damage is applied to a hit actor
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DamageAmount;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

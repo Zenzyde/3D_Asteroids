@@ -10,9 +10,17 @@ class AProj_Asteroids3DV2Pawn : public APawn
 {
 	GENERATED_BODY()
 
+	// Health component
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Health, meta = (AllowPrivateAccess = "true"))
+	class UCharacterStateComponent *HealthComponent;
+
 	/** StaticMesh component that will be the visuals for our flying pawn */
 	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent *PlaneMesh;
+
+	/** StaticMesh component that will be the visuals for our flying pawn shield */
+	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent *PlaneShieldMesh;
 
 	/** Spring arm that will offset the camera */
 	UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -22,13 +30,28 @@ class AProj_Asteroids3DV2Pawn : public APawn
 	UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent *Camera;
 
+	// Perception Stimuli Source component
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AI Sense", meta = (AllowPrivateAccess = "true"))
+	class UAIPerceptionStimuliSourceComponent *PerceptionStimuliSourceComponent;
+
+	// Objective direction arrow mesh
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent *ObjectiveDirectionMesh;
+
 public:
 	AProj_Asteroids3DV2Pawn();
 
 	// Begin AActor overrides
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void NotifyHit(class UPrimitiveComponent *MyComp, class AActor *Other, class UPrimitiveComponent *OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult &Hit) override;
 	// End AActor overrides
+
+	UFUNCTION()
+	void OnComponentBeginOverlap(UPrimitiveComponent *OverlappedComp, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &HitResult);
+
+	// Called when damage has been registered
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const &DamageEvent, AController *EventInstigator, AActor *DamageCause) override;
 
 	// Getter for Maxspeed
 	UFUNCTION(BlueprintPure)
@@ -37,6 +60,12 @@ public:
 	// Getter for current forward speed
 	UFUNCTION(BlueprintPure)
 	float GetCurrentForwardSpeed();
+
+	// Call to set the spaceships ability to turn
+	UFUNCTION(BlueprintCallable)
+	void SetTurnState(bool state);
+
+	FORCEINLINE UCharacterStateComponent *GetHealthState() const { return HealthComponent; }
 
 protected:
 	// Begin APawn overrides
@@ -54,11 +83,18 @@ protected:
 	/** Bound to the horizontal axis */
 	void MoveRightInput(float Val);
 
+	void RotateUpInput(float Val);
+
+	void RotateRightInput(float Val);
+
 	// Called when firing projectile
 	void SpawnProjectile();
 
 	// Called when exiting game
 	void ExitGame();
+
+	UFUNCTION(BlueprintCallable)
+	void DelayedInitialization();
 
 public:
 	// Bullet actor to fire
@@ -85,10 +121,6 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	float CurrentThrustAmount;
 
-	// Flag that marks whether ship is invulnerable or not
-	UPROPERTY(BlueprintReadWrite)
-	bool bIsInvulerable;
-
 	// Thrust depletion rate -- how fast does thrust amount deplete per second
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ThrustDepletionRate;
@@ -96,6 +128,10 @@ public:
 	// Thrust accumulation rate -- how fast does thrust amount accumulate per second
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ThrustAccumulationRate;
+
+	// Spawn invulnerability countdown time -- how long spaceship should be invulnerable at spawn to avoid being killed by asteroids
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float InvulnerabilitySpawnTimer;
 
 private:
 	/** How quickly forward speed changes */
@@ -105,6 +141,9 @@ private:
 	/** How quickly pawn can steer */
 	UPROPERTY(Category = Plane, EditAnywhere)
 	float TurnSpeed;
+
+	UPROPERTY(Category = Plane, EditAnywhere)
+	float MoveSpeed;
 
 	/** Max forward speed */
 	UPROPERTY(Category = Pitch, EditAnywhere)
@@ -117,6 +156,10 @@ private:
 	/** Current forward speed */
 	float CurrentForwardSpeed;
 
+	float CurrentUpSpeed;
+
+	float CurrentRightSpeed;
+
 	/** Current yaw speed */
 	float CurrentYawSpeed;
 
@@ -128,6 +171,12 @@ private:
 
 	// Flag that marks whether thrust currently being used
 	bool bIsThrusting;
+
+	// Flag that marks whether the ship can turn or not
+	bool bCanTurn;
+
+	// Actor pointer to portal once it's spawned
+	AActor *Portal;
 
 public:
 	/** Returns PlaneMesh subobject **/
